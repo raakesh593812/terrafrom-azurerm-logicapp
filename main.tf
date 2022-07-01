@@ -9,7 +9,9 @@ provider "azurerm" {
 }
 module "logic_app" {
   source  = "./module/logicapp"
-
+logic_app_type = "standard"
+storage_account_create = true
+storage_account_name = "rtxxzxmlik"
 resource_group_name = "terr-import-rg" 
 logic_app_name = "pra-la-xx-ww" 
 log_analytics_workspace_name = "DefaultWorkspace-7493c606-7d9a-48cb-8bb3-eca30de998c9-CUS"

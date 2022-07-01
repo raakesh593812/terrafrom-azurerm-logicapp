@@ -63,7 +63,7 @@ resource "azurerm_logic_app_standard" "logicapp_std" {
 }
 
 resource "azurerm_logic_app_workflow" "la_workflow" {
-  count = var.logic_app_type == "workflow" ? 1 : 0
+  count =            var.logic_app_type == "workflow" ? 1 : 0
   name                = var.logic_app_name
   location                    = data.azurerm_resource_group.rgrp.location
   resource_group_name         = data.azurerm_resource_group.rgrp.name
@@ -87,7 +87,7 @@ data "azurerm_log_analytics_workspace" "logws" {
 resource "azurerm_monitor_diagnostic_setting" "example" {
   count                      = var.log_analytics_workspace_name != null ? 1 : 0
   name                       = lower("audit-${var.logic_app_name}-diag")
- target_resource_id = azurerm_logic_app_workflow.la_workflow.0.id
+  target_resource_id =   var.logic_app_type == "workflow" ?   azurerm_logic_app_workflow.la_workflow.0.id : azurerm_logic_app_standard.logicapp_std.0.id
   log_analytics_workspace_id = data.azurerm_log_analytics_workspace.logws.0.id
 
 dynamic "log" {
