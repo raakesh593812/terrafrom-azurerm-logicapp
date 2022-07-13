@@ -16,18 +16,17 @@ resource "azurerm_storage_account" "logicapp_std_storage" {
     account_replication_type = "LRS"
 }
 #Create a plan for the logic apps to run on
-resource "azurerm_service_plan" "platform_logicapp_plan" {
+resource "azurerm_app_service_plan" "platform_logicapp_plan" {
     count                           = var.logic_app_type == "standard" ? 1 : 0
     name                            = var.app_service_plan_name
     location                        = data.azurerm_resource_group.rgrp.location
     resource_group_name             = data.azurerm_resource_group.rgrp.name
-    os_type                         = var.service_plan.os_type
-    sku_name                        = var.service_plan.sku_name
-    app_service_environment_id      = var.service_plan.app_service_environment_id
-    maximum_elastic_worker_count    = var.service_plan.maximum_elastic_worker_count
-    worker_count                    = var.service_plan.worker_count
-    per_site_scaling_enabled        = var.service_plan.per_site_scaling_enabled
-    zone_balancing_enabled          = var.service_plan.zone_balancing_enabled
+     kind                = "xenon"
+  is_xenon            = true
+    sku {
+    tier = "PremiumContainer"
+    size = "PC2"
+  }
 }
 
 
@@ -47,7 +46,7 @@ resource "azurerm_logic_app_standard" "logicapp_std" {
     name                        = var.logic_app_name
     location                    = data.azurerm_resource_group.rgrp.location
     resource_group_name         = data.azurerm_resource_group.rgrp.name
-    app_service_plan_id         = azurerm_service_plan.platform_logicapp_plan.0.id
+    app_service_plan_id         = azurerm_app_service_plan.platform_logicapp_plan.0.id
     storage_account_name        = azurerm_storage_account.logicapp_std_storage.0.name
     storage_account_access_key  = azurerm_storage_account.logicapp_std_storage.0.primary_access_key
  
@@ -113,28 +112,26 @@ dynamic "log" {
 
 }
 
-# resource "azurerm_logic_app_action_custom" "example" {
-#   name         = "example-action"
-#   logic_app_id = azurerm_logic_app_workflow.la_workflow.0.id
+resource "azurerm_logic_app_trigger_http_request" "example" {
+  name         = "some-http-trigger"
+  logic_app_id = var.logic_app_type == "workflow" ?   azurerm_logic_app_workflow.la_workflow.0.id : azurerm_logic_app_standard.logicapp_std.0.id
+  schema = var.schema_body
 
-#   body = <<BODY
-# {
-#     "description": "A variable to configure the auto expiration age in days. Configured in negative number. Default is -30 (30 days old).",
-#     "inputs": {
-#         "variables": [
-#             {
-#                 "name": "ExpirationAgeInDays",
-#                 "type": "Integer",
-#                 "value": -30
-#             }
-#         ]
-#     },
-#     "runAfter": {},
-#     "type": "InitializeVariable"
-# }
-# BODY
+}
 
-# }
+resource "azurerm_logic_app_action_custom" "action1" {
+  name         = "example-action"
+  logic_app_id = var.logic_app_type == "workflow" ?   azurerm_logic_app_workflow.la_workflow.0.id : azurerm_logic_app_standard.logicapp_std.0.id
+  body = var.custom_app_action_body
+
+}
+resource "azurerm_logic_app_action_custom" "action2" {
+  name         = "example-action2"
+  logic_app_id = var.logic_app_type == "workflow" ?   azurerm_logic_app_workflow.la_workflow.0.id : azurerm_logic_app_standard.logicapp_std.0.id
+  body = var.custom_app_action2_body
+
+}
+
 # resource "azurerm_logic_app_trigger_recurrence" "example" {
 #   name         = "run-every-day"
 #   logic_app_id = azurerm_logic_app_workflow.la_workflow.0.id

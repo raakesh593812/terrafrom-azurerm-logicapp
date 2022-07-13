@@ -80,3 +80,13 @@ variable "service_plan" {
      zone_balancing_enabled  = optional(bool)
   })
 }
+variable "custom_app_action_body" {
+  
+}
+
+variable "schema_body" {
+  
+}
+variable "custom_app_action2_body" {
+  
+}
